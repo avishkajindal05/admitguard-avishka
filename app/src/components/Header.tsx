@@ -3,8 +3,8 @@ import { Bell, User, Search } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="h-16 bg-white/80 backdrop-blur-md border border-[#EAECEF] flex items-center justify-between px-6 fixed top-4 right-8 left-[272px] z-10 rounded-2xl shadow-lg shadow-black/5">
-      <div className="flex items-center gap-4 bg-[#F8F9FB] px-4 py-2 rounded-lg w-96 border border-[#EAECEF]">
+    <header className="h-16 bg-white border-bottom border-[#EAECEF] flex items-center justify-between px-8 fixed top-0 right-0 left-60 z-10">
+      <div className="flex items-center gap-4 bg-[#F8F9FB] px-4 py-2 rounded-lg w-96">
         <Search className="w-4 h-4 text-[#9CA3AF]" />
         <input 
           type="text" 
