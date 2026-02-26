@@ -38,8 +38,12 @@ const AdmissionForm: React.FC = () => {
     let error = '';
     switch (field) {
       case 'fullName':
-        if (!value || value.trim().length < 2 || /\d/.test(value)) {
-          error = 'Full Name must be at least 2 characters and contain only letters.';
+        if (!value || value.trim().length === 0) {
+          error = 'Name is required';
+        } else if (value.trim().length < 2) {
+          error = 'Minimum 2 characters';
+        } else if (/\d/.test(value)) {
+          error = 'Name cannot contain numbers';
         }
         break;
       case 'email':
@@ -82,11 +86,6 @@ const AdmissionForm: React.FC = () => {
   const handleFieldChange = (field: keyof CandidateData, value: any) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
-      
-      // Dependency logic: If Rejected, force Offer Letter to No
-      if (field === 'interviewStatus' && value === 'Rejected') {
-        newData.offerLetterSent = false;
-      }
       
       // Real-time validation
       const fieldError = validateField(field, value, newData);
@@ -232,7 +231,7 @@ const AdmissionForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
             {Object.entries(FIELD_CONFIG).map(([key, config]: [string, any]) => {
               const fieldKey = key as keyof CandidateData;
-              const isFieldDisabled = isRejected && fieldKey === 'offerLetterSent';
+              const isFieldDisabled = false; // Allow interaction to trigger errors as requested
               
               // Use real-time errors from state
               const error = errors[fieldKey] || '';
