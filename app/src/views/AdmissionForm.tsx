@@ -243,13 +243,16 @@ const AdmissionForm: React.FC = () => {
   };
 
   const activeExceptions = useMemo(() => {
-    return Object.entries(exceptionStates)
-      .filter(([_, state]) => (state as { enabled: boolean }).enabled)
-      .map(([field, state]) => ({
+    return Object.entries(softWarnings)
+      .filter(([field, _]) => {
+        const state = exceptionStates[field];
+        return state?.enabled && validateRationale(state.rationale);
+      })
+      .map(([field, _]) => ({
         field: field as keyof CandidateData,
-        rationale: (state as { rationale: string }).rationale
+        rationale: exceptionStates[field].rationale
       }));
-  }, [exceptionStates]);
+  }, [softWarnings, exceptionStates]);
 
   const exceptionCount = activeExceptions.length;
   const isFlagged = exceptionCount > 2;
@@ -373,6 +376,15 @@ const AdmissionForm: React.FC = () => {
               );
             })}
           </div>
+
+          {isFlagged && (
+            <div className="bg-amber-100 border border-amber-400 text-amber-800 rounded-md p-3 mb-4 flex items-center gap-2 animate-in fade-in slide-in-from-top-2" aria-live="polite">
+              <span role="img" aria-label="warning">⚠️</span>
+              <p className="text-sm font-medium">
+                This candidate has more than 2 exceptions. Entry will be flagged for manager review.
+              </p>
+            </div>
+          )}
 
           <div className="pt-8 border-t border-[#EAECEF] flex flex-col md:flex-row items-center justify-between gap-6">
             <ExceptionCounter count={exceptionCount} />
