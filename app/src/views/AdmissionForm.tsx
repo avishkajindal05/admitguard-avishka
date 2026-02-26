@@ -128,7 +128,7 @@ const AdmissionForm: React.FC = () => {
         break;
       case 'offerLetterSent':
         if (value === true && !['Cleared', 'Waitlisted'].includes(currentFormData.interviewStatus)) {
-          error = 'Offer letter can only be sent if interview is Cleared or Waitlisted.';
+          error = "Offer letter can only be marked as 'Yes' if the interview status is Cleared or Waitlisted.";
         }
         break;
     }
@@ -151,6 +151,11 @@ const AdmissionForm: React.FC = () => {
 
       // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
       if (field === 'interviewStatus') {
+        // Auto-reset Offer Letter to "No" if status is Rejected
+        if (value === 'Rejected') {
+          newData.offerLetterSent = false;
+        }
+
         const offerError = validateField('offerLetterSent', newData.offerLetterSent, newData);
         setErrors(prev => {
           const next = { ...prev };
@@ -351,7 +356,13 @@ const AdmissionForm: React.FC = () => {
                   exceptionRationale={exceptionState.rationale}
                   rationaleError={exceptionState.rationaleError}
                   onExceptionRationaleChange={(val) => handleRationaleChange(key, val)}
-                  helperText={fieldKey === 'offerLetterSent' && formData.offerLetterSent ? "Offer-letter depends on Interview Status ∈ {Cleared, Waitlisted}" : undefined}
+                  helperText={
+                    fieldKey === 'offerLetterSent' 
+                      ? (formData.interviewStatus === 'Rejected' 
+                          ? "Offer letter cannot be sent to rejected candidates." 
+                          : (formData.offerLetterSent ? "Offer-letter depends on Interview Status ∈ {Cleared, Waitlisted}" : undefined))
+                      : undefined
+                  }
                   toggleLabel={fieldKey === 'percentageOrCgpa' ? (formData.scoreType === 'percentage' ? "Switch to CGPA" : "Switch to %") : undefined}
                   onToggleLabelClick={() => {
                     if (fieldKey === 'percentageOrCgpa') {
