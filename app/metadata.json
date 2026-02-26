@@ -1,0 +1,5 @@
+{
+  "name": "AdmitGuard",
+  "description": "Internal candidate admission and enrollment validation tool with structured exception handling.",
+  "requestFramePermissions": []
+}
