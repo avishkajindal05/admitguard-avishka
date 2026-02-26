@@ -74,6 +74,8 @@ const FormField: React.FC<FormFieldProps> = ({
               disabled={disabled}
               className={cn(commonClasses, "appearance-none pr-10")}
               data-rule-key={ruleKey}
+              aria-invalid={!!error}
+              aria-describedby={error ? `${ruleKey}-error` : undefined}
             >
               <option value="">Select {label}</option>
               {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -118,6 +120,8 @@ const FormField: React.FC<FormFieldProps> = ({
             max={max}
             className={commonClasses}
             data-rule-key={ruleKey}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${ruleKey}-error` : undefined}
           />
         );
     }
@@ -145,16 +149,16 @@ const FormField: React.FC<FormFieldProps> = ({
       <div className="relative">
         {renderInput()}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-          {error && <AlertCircle className="w-4 h-4 text-strict-text" />}
+          {error && <AlertCircle className="w-4 h-4 text-red-500" />}
           {warning && <AlertTriangle className="w-4 h-4 text-soft-text" />}
           {!error && !warning && value && <CheckCircle2 className="w-4 h-4 text-success-text" />}
         </div>
       </div>
 
       {/* Validation Message Area - Reserved space to avoid layout shift */}
-      <div className="min-h-[18px] flex flex-col gap-1">
+      <div className="min-h-[20px] flex flex-col gap-1" aria-live="polite" id={`${ruleKey}-error`}>
         {error && (
-          <p className="text-[13px] text-strict-text font-medium flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+          <p className="text-sm text-red-500 font-medium flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
             {error}
           </p>
         )}

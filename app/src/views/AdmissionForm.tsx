@@ -26,13 +26,58 @@ const AdmissionForm: React.FC = () => {
     offerLetterSent: false,
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [exceptionStates, setExceptionStates] = useState<Record<string, { enabled: boolean; rationale: string }>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastSubmission, setLastSubmission] = useState<Submission | null>(null);
 
   // Derived states for UI dependencies
   const isRejected = formData.interviewStatus === 'Rejected';
-  const showOfferLetterNote = formData.offerLetterSent && (formData.interviewStatus === 'Cleared' || formData.interviewStatus === 'Waitlisted');
+
+  const validateField = (field: keyof CandidateData, value: any, currentFormData: CandidateData) => {
+    let error = '';
+    switch (field) {
+      case 'fullName':
+        if (!value || value.trim().length < 2 || /\d/.test(value)) {
+          error = 'Full Name must be at least 2 characters and contain only letters.';
+        }
+        break;
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value || !emailRegex.test(value)) {
+          error = 'Enter a valid email address.';
+        }
+        break;
+      case 'phone':
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!value || !phoneRegex.test(value)) {
+          error = 'Phone number must be 10 digits and start with 6, 7, 8, or 9.';
+        }
+        break;
+      case 'highestQualification':
+        if (!value) {
+          error = 'Please select a qualification.';
+        }
+        break;
+      case 'interviewStatus':
+        if (!value) {
+          error = 'Please select an interview status.';
+        }
+        break;
+      case 'aadhaarNumber':
+        const aadhaarRegex = /^\d{12}$/;
+        if (!value || !aadhaarRegex.test(value)) {
+          error = 'Aadhaar must be exactly 12 digits. Should not contain letters';
+        }
+        break;
+      case 'offerLetterSent':
+        if (value === true && !['Cleared', 'Waitlisted'].includes(currentFormData.interviewStatus)) {
+          error = 'Offer letter can only be sent if interview is Cleared or Waitlisted.';
+        }
+        break;
+    }
+    return error;
+  };
 
   const handleFieldChange = (field: keyof CandidateData, value: any) => {
     setFormData(prev => {
@@ -43,9 +88,42 @@ const AdmissionForm: React.FC = () => {
         newData.offerLetterSent = false;
       }
       
+      // Real-time validation
+      const fieldError = validateField(field, value, newData);
+      
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        
+        if (fieldError) {
+          newErrors[field] = fieldError;
+        } else {
+          delete newErrors[field];
+        }
+
+        // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
+        if (field === 'interviewStatus') {
+          const offerError = validateField('offerLetterSent', newData.offerLetterSent, newData);
+          if (offerError) {
+            newErrors.offerLetterSent = offerError;
+          } else {
+            delete newErrors.offerLetterSent;
+          }
+        }
+
+        return newErrors;
+      });
+
       return newData;
     });
   };
+
+  const isFormValid = useMemo(() => {
+    const hasErrors = Object.keys(errors).length > 0;
+    const requiredFields: (keyof CandidateData)[] = ['fullName', 'email', 'phone', 'highestQualification', 'aadhaarNumber', 'interviewStatus'];
+    const allRequiredFilled = requiredFields.every(field => !!formData[field]);
+    
+    return !hasErrors && allRequiredFilled && !isRejected;
+  }, [errors, formData, isRejected]);
 
   const handleExceptionToggle = (field: string, enabled: boolean) => {
     setExceptionStates(prev => {
@@ -116,6 +194,7 @@ const AdmissionForm: React.FC = () => {
       aadhaarNumber: '',
       offerLetterSent: false,
     });
+    setErrors({});
     setExceptionStates({});
     setLastSubmission(null);
   };
@@ -143,7 +222,7 @@ const AdmissionForm: React.FC = () => {
         <div className="bg-strict-bg border border-strict-border p-4 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <AlertCircle className="w-5 h-5 text-strict-text" />
           <p className="text-sm font-bold text-strict-text uppercase tracking-wider">
-            Rejected candidates cannot be enrolled. Submission is hard-blocked.
+            Rejected candidates cannot be enrolled.
           </p>
         </div>
       )}
@@ -155,15 +234,10 @@ const AdmissionForm: React.FC = () => {
               const fieldKey = key as keyof CandidateData;
               const isFieldDisabled = isRejected && fieldKey === 'offerLetterSent';
               
-              // Placeholder validation states for UI demonstration
-              let error = '';
+              // Use real-time errors from state
+              const error = errors[fieldKey] || '';
               let warning = '';
               
-              // Example of how dependencies might look in UI
-              if (fieldKey === 'offerLetterSent' && formData.offerLetterSent && !['Cleared', 'Waitlisted'].includes(formData.interviewStatus)) {
-                error = 'Offer letter depends on Interview Status ∈ {Cleared, Waitlisted}';
-              }
-
               // Example of soft warning for demonstration
               if (fieldKey === 'screeningScore' && formData.screeningScore && parseInt(formData.screeningScore) < 40) {
                 warning = 'Screening score is below recommended threshold (40).';
@@ -178,6 +252,7 @@ const AdmissionForm: React.FC = () => {
                   type={config.type as any}
                   value={formData[fieldKey]}
                   onChange={(val) => handleFieldChange(fieldKey, val)}
+                  onBlur={() => handleFieldChange(fieldKey, formData[fieldKey])}
                   placeholder={config.placeholder}
                   options={config.options}
                   strict={config.strict}
@@ -210,14 +285,14 @@ const AdmissionForm: React.FC = () => {
               <div className="relative group">
                 <button
                   type="submit"
-                  disabled={isRejected}
+                  disabled={!isFormValid}
                   className="px-10 h-11 rounded-lg bg-primary text-sm font-bold text-white hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   Submit Admission
                 </button>
-                {isRejected && (
+                {!isFormValid && (
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1F2937] text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                    Submit disabled: strict validation pending
+                    {isRejected ? "Rejected candidates cannot be enrolled" : "Fix validation errors to submit"}
                   </div>
                 )}
               </div>
