@@ -193,7 +193,7 @@ const FormField: React.FC<FormFieldProps> = ({
       </div>
 
       {/* Exception Rationale UI Shell */}
-      {isExceptionEnabled && !strict && (
+      {warning && isExceptionEnabled && !strict && (
         <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between">
             <label className="text-[13px] font-semibold text-[#374151] uppercase tracking-wider">

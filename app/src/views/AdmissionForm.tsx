@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/Card';
 import FormField from '../components/FormField';
 import ExceptionCounter from '../components/ExceptionCounter';
@@ -139,22 +139,14 @@ const AdmissionForm: React.FC = () => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Real-time validation
+      // Real-time strict validation
       const fieldError = validateField(field, value, newData);
-      const fieldWarning = validateSoftField(field, value, newData);
       
       setErrors(prevErrors => {
         const newErrors = { ...prevErrors };
         if (fieldError) newErrors[field] = fieldError;
         else delete newErrors[field];
         return newErrors;
-      });
-
-      setSoftWarnings(prevWarnings => {
-        const newWarnings = { ...prevWarnings };
-        if (fieldWarning) newWarnings[field] = fieldWarning;
-        else delete newWarnings[field];
-        return newWarnings;
       });
 
       // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
@@ -168,20 +160,37 @@ const AdmissionForm: React.FC = () => {
         });
       }
 
-      // Re-validate percentageOrCgpa if scoreType changes
-      if (field === 'scoreType') {
-        const scoreWarning = validateSoftField('percentageOrCgpa', newData.percentageOrCgpa, newData);
-        setSoftWarnings(prev => {
-          const next = { ...prev };
-          if (scoreWarning) next.percentageOrCgpa = scoreWarning;
-          else delete next.percentageOrCgpa;
-          return next;
-        });
-      }
-
       return newData;
     });
   };
+
+  // Synchronize soft warnings and clean up stale exception states
+  useEffect(() => {
+    const newSoftWarnings: Record<string, string> = {};
+    const fields = Object.keys(formData) as (keyof CandidateData)[];
+    
+    fields.forEach(field => {
+      const warning = validateSoftField(field, formData[field], formData);
+      if (warning) {
+        newSoftWarnings[field] = warning;
+      }
+    });
+
+    setSoftWarnings(newSoftWarnings);
+
+    // Automatically clean up exception states when a warning resolves
+    setExceptionStates(prev => {
+      const next = { ...prev };
+      let hasChanges = false;
+      Object.keys(next).forEach(field => {
+        if (!newSoftWarnings[field]) {
+          delete next[field];
+          hasChanges = true;
+        }
+      });
+      return hasChanges ? next : prev;
+    });
+  }, [formData]);
 
   const isFormValid = useMemo(() => {
     const hasStrictErrors = Object.keys(errors).length > 0;
