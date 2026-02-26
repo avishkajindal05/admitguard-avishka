@@ -27,12 +27,64 @@ const AdmissionForm: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [exceptionStates, setExceptionStates] = useState<Record<string, { enabled: boolean; rationale: string }>>({});
+  const [softWarnings, setSoftWarnings] = useState<Record<string, string>>({});
+  const [exceptionStates, setExceptionStates] = useState<Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastSubmission, setLastSubmission] = useState<Submission | null>(null);
 
   // Derived states for UI dependencies
   const isRejected = formData.interviewStatus === 'Rejected';
+
+  const validateRationale = (rationale: string) => {
+    if (rationale.length < 30) return false;
+    const requiredPhrases = ["approved by", "special case", "documentation pending", "waiver granted"];
+    return requiredPhrases.some(phrase => rationale.toLowerCase().includes(phrase));
+  };
+
+  const validateSoftField = (field: keyof CandidateData, value: any, currentFormData: CandidateData) => {
+    let warning = '';
+    switch (field) {
+      case 'dob':
+        if (value) {
+          const birthDate = new Date(value);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          if (age < 18 || age > 35) {
+            warning = 'Candidate must be between 18 and 35 years old.';
+          }
+        }
+        break;
+      case 'graduationYear':
+        if (value) {
+          const year = parseInt(value);
+          if (year < 2015 || year > 2025) {
+            warning = 'Graduation year must be between 2015 and 2025.';
+          }
+        }
+        break;
+      case 'percentageOrCgpa':
+        if (value) {
+          const val = parseFloat(value);
+          if (currentFormData.scoreType === 'percentage') {
+            if (val < 60) warning = 'Percentage must be ≥ 60%.';
+          } else {
+            if (val < 6.0) warning = 'CGPA must be ≥ 6.0.';
+          }
+        }
+        break;
+      case 'screeningScore':
+        if (value) {
+          const val = parseInt(value);
+          if (val < 40) warning = 'Screening score must be ≥ 40.';
+        }
+        break;
+    }
+    return warning;
+  };
 
   const validateField = (field: keyof CandidateData, value: any, currentFormData: CandidateData) => {
     let error = '';
@@ -89,44 +141,69 @@ const AdmissionForm: React.FC = () => {
       
       // Real-time validation
       const fieldError = validateField(field, value, newData);
+      const fieldWarning = validateSoftField(field, value, newData);
       
       setErrors(prevErrors => {
         const newErrors = { ...prevErrors };
-        
-        if (fieldError) {
-          newErrors[field] = fieldError;
-        } else {
-          delete newErrors[field];
-        }
-
-        // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
-        if (field === 'interviewStatus') {
-          const offerError = validateField('offerLetterSent', newData.offerLetterSent, newData);
-          if (offerError) {
-            newErrors.offerLetterSent = offerError;
-          } else {
-            delete newErrors.offerLetterSent;
-          }
-        }
-
+        if (fieldError) newErrors[field] = fieldError;
+        else delete newErrors[field];
         return newErrors;
       });
+
+      setSoftWarnings(prevWarnings => {
+        const newWarnings = { ...prevWarnings };
+        if (fieldWarning) newWarnings[field] = fieldWarning;
+        else delete newWarnings[field];
+        return newWarnings;
+      });
+
+      // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
+      if (field === 'interviewStatus') {
+        const offerError = validateField('offerLetterSent', newData.offerLetterSent, newData);
+        setErrors(prev => {
+          const next = { ...prev };
+          if (offerError) next.offerLetterSent = offerError;
+          else delete next.offerLetterSent;
+          return next;
+        });
+      }
+
+      // Re-validate percentageOrCgpa if scoreType changes
+      if (field === 'scoreType') {
+        const scoreWarning = validateSoftField('percentageOrCgpa', newData.percentageOrCgpa, newData);
+        setSoftWarnings(prev => {
+          const next = { ...prev };
+          if (scoreWarning) next.percentageOrCgpa = scoreWarning;
+          else delete next.percentageOrCgpa;
+          return next;
+        });
+      }
 
       return newData;
     });
   };
 
   const isFormValid = useMemo(() => {
-    const hasErrors = Object.keys(errors).length > 0;
+    const hasStrictErrors = Object.keys(errors).length > 0;
     const requiredFields: (keyof CandidateData)[] = ['fullName', 'email', 'phone', 'highestQualification', 'aadhaarNumber', 'interviewStatus'];
     const allRequiredFilled = requiredFields.every(field => !!formData[field]);
     
-    return !hasErrors && allRequiredFilled && !isRejected;
-  }, [errors, formData, isRejected]);
+    if (hasStrictErrors || !allRequiredFilled || isRejected) return false;
+
+    // Check soft warnings and overrides
+    const softFields = Object.keys(softWarnings);
+    for (const field of softFields) {
+      const state = exceptionStates[field];
+      if (!state || !state.enabled) return false;
+      if (!validateRationale(state.rationale)) return false;
+    }
+
+    return true;
+  }, [errors, softWarnings, exceptionStates, formData, isRejected]);
 
   const handleExceptionToggle = (field: string, enabled: boolean) => {
-    setExceptionStates(prev => {
-      const p = prev as Record<string, { enabled: boolean; rationale: string }>;
+    setExceptionStates((prev: Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>) => {
+      const p = prev as Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>;
       const current = p[field] || { enabled: false, rationale: '' };
       return {
         ...p,
@@ -136,12 +213,17 @@ const AdmissionForm: React.FC = () => {
   };
 
   const handleRationaleChange = (field: string, rationale: string) => {
-    setExceptionStates(prev => {
-      const p = prev as Record<string, { enabled: boolean; rationale: string }>;
+    const isValid = validateRationale(rationale);
+    const rationaleError = rationale.length > 0 && !isValid 
+      ? "Rationale must be at least 30 characters and include an approval phrase (e.g., ‘approved by’, ‘special case’)."
+      : "";
+
+    setExceptionStates((prev: Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>) => {
+      const p = prev as Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>;
       const current = p[field] || { enabled: false, rationale: '' };
       return {
         ...p,
-        [field]: { ...current, rationale }
+        [field]: { ...current, rationale, rationaleError }
       };
     });
   };
@@ -194,6 +276,7 @@ const AdmissionForm: React.FC = () => {
       offerLetterSent: false,
     });
     setErrors({});
+    setSoftWarnings({});
     setExceptionStates({});
     setLastSubmission(null);
   };
@@ -235,19 +318,14 @@ const AdmissionForm: React.FC = () => {
               
               // Use real-time errors from state
               const error = errors[fieldKey] || '';
-              let warning = '';
-              
-              // Example of soft warning for demonstration
-              if (fieldKey === 'screeningScore' && formData.screeningScore && parseInt(formData.screeningScore) < 40) {
-                warning = 'Screening score is below recommended threshold (40).';
-              }
+              const warning = softWarnings[fieldKey] || '';
 
-              const exceptionState = exceptionStates[key] || { enabled: false, rationale: '' };
+              const exceptionState = exceptionStates[key] || { enabled: false, rationale: '', rationaleError: '' };
 
               return (
                 <FormField
                   key={key}
-                  label={config.label}
+                  label={fieldKey === 'percentageOrCgpa' ? (formData.scoreType === 'percentage' ? 'Percentage' : 'CGPA') : config.label}
                   type={config.type as any}
                   value={formData[fieldKey]}
                   onChange={(val) => handleFieldChange(fieldKey, val)}
@@ -262,9 +340,15 @@ const AdmissionForm: React.FC = () => {
                   isExceptionEnabled={exceptionState.enabled}
                   onToggleException={(enabled) => handleExceptionToggle(key, enabled)}
                   exceptionRationale={exceptionState.rationale}
+                  rationaleError={exceptionState.rationaleError}
                   onExceptionRationaleChange={(val) => handleRationaleChange(key, val)}
                   helperText={fieldKey === 'offerLetterSent' && formData.offerLetterSent ? "Offer-letter depends on Interview Status ∈ {Cleared, Waitlisted}" : undefined}
-                  toggleLabel={fieldKey === 'percentageOrCgpa' ? "% / CGPA" : undefined}
+                  toggleLabel={fieldKey === 'percentageOrCgpa' ? (formData.scoreType === 'percentage' ? "Switch to CGPA" : "Switch to %") : undefined}
+                  onToggleLabelClick={() => {
+                    if (fieldKey === 'percentageOrCgpa') {
+                      handleFieldChange('scoreType', formData.scoreType === 'percentage' ? 'cgpa' : 'percentage');
+                    }
+                  }}
                 />
               );
             })}

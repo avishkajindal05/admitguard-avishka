@@ -20,6 +20,7 @@ interface FormFieldProps {
   error?: string;
   warning?: string;
   exceptionRationale?: string;
+  rationaleError?: string;
   onExceptionRationaleChange?: (value: string) => void;
   onToggleException?: (enabled: boolean) => void;
   isExceptionEnabled?: boolean;
@@ -28,6 +29,7 @@ interface FormFieldProps {
   min?: number;
   max?: number;
   toggleLabel?: string;
+  onToggleLabelClick?: () => void;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -43,6 +45,7 @@ const FormField: React.FC<FormFieldProps> = ({
   error,
   warning,
   exceptionRationale,
+  rationaleError,
   onExceptionRationaleChange,
   onToggleException,
   isExceptionEnabled = false,
@@ -50,7 +53,8 @@ const FormField: React.FC<FormFieldProps> = ({
   helperText,
   min,
   max,
-  toggleLabel
+  toggleLabel,
+  onToggleLabelClick
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -58,7 +62,7 @@ const FormField: React.FC<FormFieldProps> = ({
     const commonClasses = cn(
       "w-full h-11 px-3 rounded-lg border transition-all duration-200 outline-none text-[15px] bg-white",
       isFocused ? "border-primary ring-2 ring-primary/10 shadow-sm" : "border-[#D1D5DB]",
-      error ? "border-strict-border bg-strict-bg/10" : warning ? "border-soft-border bg-soft-bg/10" : "hover:border-[#9CA3AF]",
+      error ? "border-red-500 bg-red-50/10" : warning ? "border-amber-500 bg-amber-50/10" : "hover:border-[#9CA3AF]",
       disabled && "bg-[#F3F4F6] cursor-not-allowed text-[#9CA3AF] border-[#E5E7EB]"
     );
 
@@ -138,7 +142,7 @@ const FormField: React.FC<FormFieldProps> = ({
         {toggleLabel && (
           <button 
             type="button"
-            onClick={() => onChange(value)} // This is just a placeholder for the % / CGPA toggle
+            onClick={() => onToggleLabelClick?.()}
             className="text-[11px] font-semibold text-primary uppercase tracking-wider hover:underline"
           >
             {toggleLabel}
@@ -150,7 +154,7 @@ const FormField: React.FC<FormFieldProps> = ({
         {renderInput()}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
           {error && <AlertCircle className="w-4 h-4 text-red-500" />}
-          {warning && <AlertTriangle className="w-4 h-4 text-soft-text" />}
+          {warning && <AlertTriangle className="w-4 h-4 text-amber-600" />}
           {!error && !warning && value && <CheckCircle2 className="w-4 h-4 text-success-text" />}
         </div>
       </div>
@@ -164,19 +168,19 @@ const FormField: React.FC<FormFieldProps> = ({
         )}
         {warning && (
           <div className="space-y-2">
-            <p className="text-[13px] text-soft-text font-medium flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+            <p className="text-sm text-amber-600 font-medium flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
               {warning}
             </p>
             {!strict && onToggleException && (
-              <div className="flex items-center gap-2 bg-soft-bg/30 p-2 rounded-lg border border-soft-border/30">
+              <div className="flex items-center gap-2 bg-amber-50/30 p-2 rounded-lg border border-amber-200/30">
                 <input
                   type="checkbox"
                   id={`exception-${ruleKey}`}
                   checked={isExceptionEnabled}
                   onChange={(e) => onToggleException(e.target.checked)}
-                  className="w-4 h-4 rounded border-[#D1D5DB] text-primary focus:ring-primary"
+                  className="w-4 h-4 rounded border-[#D1D5DB] text-amber-600 focus:ring-amber-500"
                 />
-                <label htmlFor={`exception-${ruleKey}`} className="text-[13px] font-medium text-soft-text cursor-pointer">
+                <label htmlFor={`exception-${ruleKey}`} className="text-[13px] font-medium text-amber-700 cursor-pointer">
                   Request Exception
                 </label>
               </div>
@@ -202,15 +206,25 @@ const FormField: React.FC<FormFieldProps> = ({
           <textarea
             value={exceptionRationale}
             onChange={(e) => onExceptionRationaleChange?.(e.target.value)}
-            placeholder="Provide rationale for this exception (e.g., 'Approved by Admissions Dean', 'Special case due to...')"
+            placeholder="Provide justification for exception (min 30 chars with approval phrase)"
             className={cn(
-              "w-full min-h-[80px] p-3 rounded-lg border border-[#D1D5DB] outline-none text-[14px] transition-all focus:border-primary focus:ring-2 focus:ring-primary/10",
-              (exceptionRationale?.length || 0) >= 30 ? "border-success-border bg-success-bg/5" : "border-soft-border bg-soft-bg/5"
+              "w-full min-h-[100px] p-3 rounded-lg border outline-none text-[14px] transition-all focus:ring-2",
+              rationaleError 
+                ? "border-red-500 bg-red-50/10 focus:ring-red-500/10" 
+                : (exceptionRationale?.length || 0) >= 30 
+                  ? "border-green-500 bg-green-50/5 focus:ring-green-500/10" 
+                  : "border-amber-500 bg-amber-50/5 focus:ring-amber-500/10"
             )}
           />
-          <p className="text-[12px] text-[#6B7280]">
-            Rationale must satisfy later rules (≥30 chars + required keywords).
-          </p>
+          {rationaleError ? (
+            <p className="text-xs text-red-500 font-medium" aria-live="polite">
+              {rationaleError}
+            </p>
+          ) : (
+            <p className="text-[12px] text-[#6B7280]">
+              Rationale must be at least 30 characters and include an approval phrase (e.g., ‘approved by’, ‘special case’).
+            </p>
+          )}
         </div>
       )}
     </div>
