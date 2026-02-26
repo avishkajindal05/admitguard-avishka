@@ -29,7 +29,7 @@ const AppContent: React.FC = () => {
       <div className="flex-1 ml-60 flex flex-col">
         <Header />
         
-        <main className="flex-1 mt-24 p-8 overflow-y-auto">
+        <main className="flex-1 mt-16 p-8 overflow-y-auto">
           {renderView()}
         </main>
       </div>

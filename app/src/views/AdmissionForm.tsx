@@ -7,7 +7,9 @@ import SuccessScreen from '../components/SuccessScreen';
 import { FIELD_CONFIG } from '../constants';
 import { CandidateData, Exception, Submission } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { rulesConfig } from '../config/rules';
+import { validateField, validateRationale } from '../utils/validationEngine';
 
 const AdmissionForm: React.FC = () => {
   const { addSubmission } = useAppContext();
@@ -35,131 +37,31 @@ const AdmissionForm: React.FC = () => {
   // Derived states for UI dependencies
   const isRejected = formData.interviewStatus === 'Rejected';
 
-  const validateRationale = (rationale: string) => {
-    if (rationale.length < 30) return false;
-    const requiredPhrases = ["approved by", "special case", "documentation pending", "waiver granted"];
-    return requiredPhrases.some(phrase => rationale.toLowerCase().includes(phrase));
-  };
-
-  const validateSoftField = (field: keyof CandidateData, value: any, currentFormData: CandidateData) => {
-    let warning = '';
-    switch (field) {
-      case 'dob':
-        if (value) {
-          const birthDate = new Date(value);
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const m = today.getMonth() - birthDate.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          if (age < 18 || age > 35) {
-            warning = 'Candidate must be between 18 and 35 years old.';
-          }
-        }
-        break;
-      case 'graduationYear':
-        if (value) {
-          const year = parseInt(value);
-          if (year < 2015 || year > 2025) {
-            warning = 'Graduation year must be between 2015 and 2025.';
-          }
-        }
-        break;
-      case 'percentageOrCgpa':
-        if (value) {
-          const val = parseFloat(value);
-          if (currentFormData.scoreType === 'percentage') {
-            if (val < 60) warning = 'Percentage must be ≥ 60%.';
-          } else {
-            if (val < 6.0) warning = 'CGPA must be ≥ 6.0.';
-          }
-        }
-        break;
-      case 'screeningScore':
-        if (value) {
-          const val = parseInt(value);
-          if (val < 40) warning = 'Screening score must be ≥ 40.';
-        }
-        break;
-    }
-    return warning;
-  };
-
-  const validateField = (field: keyof CandidateData, value: any, currentFormData: CandidateData) => {
-    let error = '';
-    switch (field) {
-      case 'fullName':
-        if (!value || value.trim().length === 0) {
-          error = 'Name is required';
-        } else if (value.trim().length < 2) {
-          error = 'Minimum 2 characters';
-        } else if (/\d/.test(value)) {
-          error = 'Name cannot contain numbers';
-        }
-        break;
-      case 'email':
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!value || !emailRegex.test(value)) {
-          error = 'Enter a valid email address.';
-        }
-        break;
-      case 'phone':
-        const phoneRegex = /^[6-9]\d{9}$/;
-        if (!value || !phoneRegex.test(value)) {
-          error = 'Phone number must be 10 digits and start with 6, 7, 8, or 9.';
-        }
-        break;
-      case 'highestQualification':
-        if (!value) {
-          error = 'Please select a qualification.';
-        }
-        break;
-      case 'interviewStatus':
-        if (!value) {
-          error = 'Please select an interview status.';
-        }
-        break;
-      case 'aadhaarNumber':
-        const aadhaarRegex = /^\d{12}$/;
-        if (!value || !aadhaarRegex.test(value)) {
-          error = 'Aadhaar must be exactly 12 digits. Should not contain letters';
-        }
-        break;
-      case 'offerLetterSent':
-        if (value === true && !['Cleared', 'Waitlisted'].includes(currentFormData.interviewStatus)) {
-          error = "Offer letter can only be marked as 'Yes' if the interview status is Cleared or Waitlisted.";
-        }
-        break;
-    }
-    return error;
-  };
-
   const handleFieldChange = (field: keyof CandidateData, value: any) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
+      // Auto-reset Offer Letter to "No" if status is Rejected
+      if (field === 'interviewStatus' && value === 'Rejected') {
+        newData.offerLetterSent = false;
+      }
+
       // Real-time strict validation
-      const fieldError = validateField(field, value, newData);
+      const result = validateField(field, value, newData, rulesConfig.rules);
       
       setErrors(prevErrors => {
         const newErrors = { ...prevErrors };
-        if (fieldError) newErrors[field] = fieldError;
+        if (result.error) newErrors[field] = result.error;
         else delete newErrors[field];
         return newErrors;
       });
 
       // Cross-field validation: if interviewStatus changes, re-validate offerLetterSent
       if (field === 'interviewStatus') {
-        // Auto-reset Offer Letter to "No" if status is Rejected
-        if (value === 'Rejected') {
-          newData.offerLetterSent = false;
-        }
-
-        const offerError = validateField('offerLetterSent', newData.offerLetterSent, newData);
+        const offerResult = validateField('offerLetterSent', newData.offerLetterSent, newData, rulesConfig.rules);
         setErrors(prev => {
           const next = { ...prev };
-          if (offerError) next.offerLetterSent = offerError;
+          if (offerResult.error) next.offerLetterSent = offerResult.error;
           else delete next.offerLetterSent;
           return next;
         });
@@ -175,9 +77,9 @@ const AdmissionForm: React.FC = () => {
     const fields = Object.keys(formData) as (keyof CandidateData)[];
     
     fields.forEach(field => {
-      const warning = validateSoftField(field, formData[field], formData);
-      if (warning) {
-        newSoftWarnings[field] = warning;
+      const result = validateField(field, formData[field], formData, rulesConfig.rules);
+      if (result.warning) {
+        newSoftWarnings[field] = result.warning;
       }
     });
 
@@ -208,8 +110,9 @@ const AdmissionForm: React.FC = () => {
     const softFields = Object.keys(softWarnings);
     for (const field of softFields) {
       const state = exceptionStates[field];
+      const rule = rulesConfig.rules.find(r => r.field === field);
       if (!state || !state.enabled) return false;
-      if (!validateRationale(state.rationale)) return false;
+      if (!validateRationale(state.rationale, rule)) return false;
     }
 
     return true;
@@ -227,9 +130,10 @@ const AdmissionForm: React.FC = () => {
   };
 
   const handleRationaleChange = (field: string, rationale: string) => {
-    const isValid = validateRationale(rationale);
+    const rule = rulesConfig.rules.find(r => r.field === field);
+    const isValid = validateRationale(rationale, rule);
     const rationaleError = rationale.length > 0 && !isValid 
-      ? "Rationale must be at least 30 characters and include an approval phrase (e.g., ‘approved by’, ‘special case’)."
+      ? `Rationale must be at least ${rule?.rationaleMinLength || 30} characters and include an approval phrase.`
       : "";
 
     setExceptionStates((prev: Record<string, { enabled: boolean; rationale: string; rationaleError?: string }>) => {
@@ -246,7 +150,8 @@ const AdmissionForm: React.FC = () => {
     return Object.entries(softWarnings)
       .filter(([field, _]) => {
         const state = exceptionStates[field];
-        return state?.enabled && validateRationale(state.rationale);
+        const rule = rulesConfig.rules.find(r => r.field === field);
+        return state?.enabled && validateRationale(state.rationale, rule);
       })
       .map(([field, _]) => ({
         field: field as keyof CandidateData,
@@ -331,6 +236,9 @@ const AdmissionForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
             {Object.entries(FIELD_CONFIG).map(([key, config]: [string, any]) => {
               const fieldKey = key as keyof CandidateData;
+              const rule = rulesConfig.rules.find(r => r.field === fieldKey);
+              const isStrict = rule?.type === 'strict';
+              const exceptionAllowed = rule?.exceptionAllowed === true;
               const isFieldDisabled = false; // Allow interaction to trigger errors as requested
               
               // Use real-time errors from state
@@ -349,13 +257,13 @@ const AdmissionForm: React.FC = () => {
                   onBlur={() => handleFieldChange(fieldKey, formData[fieldKey])}
                   placeholder={config.placeholder}
                   options={config.options}
-                  strict={config.strict}
+                  strict={isStrict}
                   ruleKey={config.ruleKey}
                   error={error}
                   warning={warning}
                   disabled={isFieldDisabled}
                   isExceptionEnabled={exceptionState.enabled}
-                  onToggleException={(enabled) => handleExceptionToggle(key, enabled)}
+                  onToggleException={exceptionAllowed ? (enabled) => handleExceptionToggle(key, enabled) : undefined}
                   exceptionRationale={exceptionState.rationale}
                   rationaleError={exceptionState.rationaleError}
                   onExceptionRationaleChange={(val) => handleRationaleChange(key, val)}
