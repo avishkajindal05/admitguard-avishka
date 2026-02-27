@@ -91,14 +91,6 @@ export const validateField = (
         }
         break;
 
-      case 'cgpaMin':
-        if (isPresent(val)) {
-          const minThreshold = parseFloat(params);
-          const numericVal = parseFloat(val);
-          if (isNaN(numericVal) || numericVal < minThreshold) tokenValid = false;
-        }
-        break;
-
       case 'scoreMin':
         if (isPresent(val)) {
           const minThreshold = parseInt(params);

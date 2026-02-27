@@ -15,7 +15,7 @@ export const FIELD_CONFIG = {
   dob: { label: 'Date of Birth', type: 'date', ruleKey: 'dob', strict: false },
   highestQualification: { label: 'Highest Qualification', type: 'select', ruleKey: 'highestQualification', strict: true, options: QUALIFICATIONS },
   graduationYear: { label: 'Graduation Year', type: 'number', ruleKey: 'graduationYear', strict: false, min: 2015, max: 2025 },
-  percentage_cgpa: { label: 'Percentage / CGPA', type: 'number', ruleKey: 'percentage_cgpa', strict: false },
+  percentageOrCgpa: { label: 'Percentage / CGPA', type: 'number', ruleKey: 'percentageOrCgpa', strict: false },
   screeningScore: { label: 'Screening Test Score', type: 'number', ruleKey: 'screeningScore', strict: false, min: 0, max: 100 },
   interviewStatus: { label: 'Interview Status', type: 'select', ruleKey: 'interviewStatus', strict: true, options: INTERVIEW_STATUSES },
   aadhaarNumber: { label: 'Aadhaar Number', type: 'text', ruleKey: 'aadhaarNumber', strict: true, placeholder: '123456789012' },

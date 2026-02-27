@@ -11,7 +11,7 @@ export interface CandidateData {
   dob: string;
   highestQualification: HighestQualification | '';
   graduationYear: string;
-  percentage_cgpa: string;
+  percentageOrCgpa: string;
   scoreType: 'percentage' | 'cgpa';
   screeningScore: string;
   interviewStatus: InterviewStatus | '';

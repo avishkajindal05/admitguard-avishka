@@ -60,9 +60,9 @@ export const rulesConfig: RulesConfig = {
       rationaleKeywords: ['approved by', 'special case', 'documentation pending', 'waiver granted']
     },
     {
-      field: 'percentage_cgpa',
+      field: 'percentageOrCgpa',
       type: 'soft',
-      validation: ['modeAware:scoreType=percentage:percentageMin:60|cgpa:cgpaMin:6.0'],
+      validation: ['modeAware:scoreType=percentage:minValue:60|cgpa:minValue:5.0'],
       warningMessage: 'Academic score is below recommended threshold',
       exceptionAllowed: true,
       rationaleMinLength: 30,
