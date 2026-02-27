@@ -85,16 +85,31 @@ const AdmissionForm: React.FC = () => {
 
     setSoftWarnings(newSoftWarnings);
 
-    // Automatically clean up exception states when a warning resolves
+    // Automatically enable exception states when a warning appears, and clean up when resolved
     setExceptionStates(prev => {
       const next = { ...prev };
       let hasChanges = false;
+      
+      // Enable new warnings
+      Object.keys(newSoftWarnings).forEach(field => {
+        if (!next[field] || !next[field].enabled) {
+          next[field] = { 
+            enabled: true, 
+            rationale: next[field]?.rationale || '', 
+            rationaleError: next[field]?.rationaleError 
+          };
+          hasChanges = true;
+        }
+      });
+
+      // Cleanup resolved warnings
       Object.keys(next).forEach(field => {
         if (!newSoftWarnings[field]) {
           delete next[field];
           hasChanges = true;
         }
       });
+      
       return hasChanges ? next : prev;
     });
   }, [formData]);
