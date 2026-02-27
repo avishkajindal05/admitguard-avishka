@@ -1,104 +1,310 @@
-# Research Notes — Sprint 0
-**AdmitGuard | Avishka**  
-Date: Sprint 0,
+# Research Notes — AdmitGuard
+**Author:** Avishka Jindal
+**Sprint:** 0 — Discovery & Planning Phase
+**Project:** AdmitGuard — Admission Data Validation & Compliance System
 
 ---
 
-## What I Read / Watched
+## Overview
 
-### Articles on Vibe Coding & Prompt Engineering
-
-**1. "How to Actually Get Good Output from AI Coding Tools" — various sources**
-- Key insight: The model doesn't know what you want — it knows what you *said*. These are different things.
-- Vague prompts produce vague code. "Build a form" gives you a generic demo. "Build a form that validates phone numbers starting with 6–9, exactly 10 digits, and shows inline red error text on keystroke" gives you something usable.
-- The most powerful pattern: **role + task + constraints + what NOT to do**. The "do NOT" part is underrated — it prevents the AI from padding your output with things you don't want (like Bootstrap defaults or placeholder logic).
-- Start with structure, layer in logic. Never ask for everything at once.
-
-**2. Google AI Studio Build Mode Documentation (aistudio.google.com)**
-- Build mode generates a React app from prompts in the interface.
-- You can iterate by adding follow-up prompts — the model has memory of the full generated file.
-- Key tip: treat each prompt like a precise git commit — one concern per prompt. Don't mix "add a new field" with "fix the validation logic."
-- The interface lets you preview live and copy the generated code.
-- Gemini 2.0 Flash and Gemini 1.5 Pro are the recommended models for Build Mode. Flash is faster for iteration; Pro for complex logic.
-
-**3. "Prompt Engineering for Developers" (general resource)**
-- The chain-of-thought technique works well for rule engines: ask the AI to "think through the validation logic step by step before writing code."
-- Giving the model **examples of edge cases** in the prompt prevents it from writing happy-path-only code.
-- Framing: "You are a senior frontend developer" is more effective than "write me code" because it sets an expectation of quality, not just output.
-- **Negative constraints matter**: "Do NOT use any external validation libraries. Write the logic from scratch." Otherwise the model defaults to whatever is most common in training data.
+This document captures all independent research conducted during Sprint 0 (Wednesday evening, before the Thursday demo). It covers: Vibe Coding methodology, Google AI Studio Build Mode, prompt engineering techniques, UX best practices for form validation, existing solutions landscape, and key architectural decisions derived from research.
 
 ---
 
-## What I Learned About Vibe Coding
+# 1️⃣ Vibe Coding & Google AI Studio Research
 
-### The Core Mental Model
-Vibe coding is not "AI writes code, I paste it." It's a **structured prompting discipline** where you:
-1. Know *exactly* what you want before you type anything
-2. Break the problem into sequenced, layered prompts
+---
+
+## 📘 Source: Google AI Studio Build Mode Documentation
+https://ai.google.dev/gemini-api/docs/aistudio-build-mode
+
+### What I Studied
+- Build Mode architecture and Antigravity Agent multi-file generation
+- Annotation mode workflow for UI-specific changes
+- Deployment options: Cloud Run vs. external hosting
+- API key handling and security implications
+- Sharing and 403 error troubleshooting
+
+### Key Learnings
+
+**Antigravity Agent Architecture**
+AI Studio manages multi-file changes intelligently and propagates updates across the stack. Critical for AdmitGuard because:
+- Refactoring validation logic touches multiple files simultaneously
+- Separating config from UI components requires coordinated changes
+- Managing modular structure (views, components, utils) needs cross-file awareness
+
+**Deployment Security**
+- JavaScript apps run client-side → API keys embedded in frontend are exposed
+- Secure deployment requires server-side key usage
+- Cloud Run avoids exposing keys in shared apps
+
+Impact on AdmitGuard:
+- For prototype → client-side is acceptable (no sensitive keys used)
+- For production → validation + key logic must move server-side
+
+**Build Failure Debugging**
+If a shared app throws a 403: check browser extensions, fix build issues via prompt, re-share clean build.
+Takeaway: AI output must be validated before sharing. Never assume the first output is production-ready.
+
+---
+
+## 📘 Source: Google Codelab — Vibe Code with Gemini
+https://codelabs.developers.google.com/vibe-code-with-gemini-in-aistudio#0
+
+### What I Learned
+- Iterative prompting is the core workflow — not one-shot generation
+- Don't overload the first prompt
+- Use annotation mode for precise UI refinement rather than describing changes in text
+- Separate structure → logic → polish across prompts — never mix concerns
+
+Important insight: LLMs perform best when given context + acceptance criteria, not vague intent.
+
+---
+
+## 📘 Source: Guide to Vibe Coding with Google AI Studio
+https://medium.com/@davidlfliang/guide-vibe-coding-with-google-ai-studio-literally-4a3f6fb3400f
+
+### Key Insight
+API key is only needed when deploying outside AI Studio. For in-platform prototype, no server infrastructure is required.
+
+Confirms: AdmitGuard Phase 1 can remain fully client-side without any infrastructure cost or complexity.
+
+---
+
+## 📘 Source: Various AI Coding Tool Articles
+
+**Core insight:** The model doesn't know what you want — it knows what you *said*. These are different things.
+
+- Vague prompts produce vague code. "Build a form" → generic demo. "Build a form that validates phone numbers starting with 6–9, exactly 10 digits, and shows inline red error text on keystroke" → something usable.
+- The most powerful pattern: **role + task + constraints + what NOT to do**. The "do NOT" part is underrated — it prevents the AI from padding output with unwanted patterns (like Bootstrap defaults or placeholder validation logic).
+- **Key discovery:** You can ask AI Studio to fix specific bugs by describing the broken behavior — it reads the existing generated code and patches it. Better than re-prompting from scratch.
+- Gemini 2.0 Flash is faster for iteration; Gemini 1.5 Pro better for complex logic.
+
+---
+
+# 2️⃣ Prompt Engineering Research
+
+---
+
+## 📘 Source: Taming Vibe Coding — Engineer's Guide
+https://medium.com/google-cloud/taming-vibe-coding-the-engineers-guide-fff70b6d807a
+
+### Core Framework Learned
+
+The four-part structure that maximizes output quality:
+1. **Context** — What the app is and what already exists
+2. **To Dos** — Precise, single-concern task definition
+3. **Not To Dos** — Explicit anti-patterns to avoid
+4. **Acceptance Criteria** — Testable conditions for "done"
+
+Most important insight:
+> Context engineering is the real engineering. The code is the output, not the work.
+
+Providing documentation and examples before task assignment drastically improves output quality. This is why Prompt 1 was sent with the design doc, PDR, and napkin wireframe attached — not just the text description.
+
+---
+
+## 📘 Source: Dev.to — Ultimate Prompt Strategy
+https://dev.to/dumebii/the-ultimate-prompt-strategy-how-to-vibe-code-production-ready-websites-4e9
+
+### Key Concepts
+- Adopt "Senior Architect" mindset — you are directing, not asking
+- Treat AI as a capable junior developer who needs precise instructions
+- Set standards before coding begins — the system prompt is your coding standards doc
+- Use constraints as guardrails, not as optional suggestions
+
+Takeaway: Output quality = clarity of constraints. Every ambiguity in the prompt becomes a guess in the code.
+
+---
+
+## 📘 Source: Prompt-Driven Development (Capgemini)
+https://capgemini.github.io/ai/prompt-driven-development/
+
+### Engineering Principles Applied to AdmitGuard
+- Clean Architecture → UI separated from business logic (validation engine)
+- Separation of concerns → config in `/config/rules.ts`, not in form components
+- Client-side validation best practices → inline, real-time, not submit-time
+- Structured error handling → strict vs. soft error states clearly differentiated
+
+---
+
+## 📘 Source: Andrej Karpathy on AI Code Review
+https://x.com/karpathy/status/1886192184808149383
+
+Insight: Use a strong model to critique your own code. Self-review via model = structured improvement loop.
+Applied: Used Claude to audit the AdmitGuard codebase against the brief requirements — found CGPA threshold bug (5.0 vs 6.0), graduation year bug (2026 vs 2025), and exception auto-enable logic issue.
+
+---
+
+## Prompting Risks Identified
+
+### Vibe Collapse (Context Rot)
+Long AI Studio sessions degrade output quality as context window fills.
+Solution:
+- Restart session if looping on the same bug
+- Reset context when stuck after 2+ failed attempts
+- Avoid infinite refinement cycles — move to a new prompt with fresh framing
+
+### The Kitchen Sink Anti-Pattern
+Dumping every requirement into one prompt = the AI loses focus, picks the easiest interpretation of each constraint, and produces superficially correct but logically weak code.
+Solution: One concern per prompt. The 8-prompt sequence was designed around this.
+
+---
+
+# 3️⃣ Prompt Structure Used in This Project
+
+Derived from research and applied to all 8 AdmitGuard prompts:
+
+```
+Role: [who the AI is — "senior frontend developer building an internal business tool"]
+Task: [clear, specific, single-concern task]
+Context: [what already exists, what not to break]
+Constraints: [hard rules the output must follow]
+Do NOT: [anti-patterns to actively avoid]
+Output format: [what deliverable is expected]
+Acceptance criteria: [testable conditions for "done"]
+```
+
+### The Layered Prompting Strategy Applied
+- **Prompt 1** → Structure only (no logic — reserve hooks for later wiring)
+- **Prompt 2** → Strict validation only (no soft rules yet)
+- **Prompt 3** → Edge case verification and bug fixing
+- **Prompt 4** → Soft rules + exception override flow
+- **Prompt 5** → Exception counter + flagging system
+- **Prompt 6** → Config refactor — move rules out of components
+- **Prompt 7** → Audit log + localStorage persistence
+- **Prompt 8** → UI polish (annotation mode)
+
+---
+
+# 4️⃣ UX Research — Form Validation
+
+---
+
+## 📘 Source: LogRocket — Inline vs After-Submission Validation
+https://blog.logrocket.com/ux-design/ux-form-validation-inline-after-submission/
+
+### Key Learnings
+- Inline validation (errors as you type) reduces cognitive load vs. submit-time error dumps
+- Immediate feedback prevents form frustration and abandonment
+- Clear, human-readable error messages improve completion rate
+- Reserve space for error messages — avoid layout shift when they appear
+
+Decision: AdmitGuard uses real-time inline validation (onChange + onBlur), with reserved error space below every field to prevent layout shift.
+
+---
+
+# 5️⃣ Existing Solutions Landscape
+
+Understanding what already exists and where AdmitGuard fits:
+
+---
+
+## Enterprise Admission Systems
+
+**Slate** (US higher-ed)
+- Strengths: Rule workflows, decision logs, audit tracking
+- Weakness: Enterprise-heavy, expensive, admin-dependent rule editing
+
+**LeadSquared** (Indian EdTech)
+- Strengths: Workflow stages, conditional routing
+- Weakness: Exception governance is weak, config flexibility limited
+
+**Ellucian Banner**
+- Full ERP-grade admissions. Complete overkill for a lightweight compliance layer.
+
+---
+
+## Internal Tool Builders
+
+Retool / AppSheet / Jotform Enterprise
+- Strengths: Conditional logic, basic validation
+- Weakness: Manual rule engineering, no structured exception tracking
+
+---
+
+## Business Rule Engines (BRMS)
+
+IBM ODM / Red Hat Drools / FICO Decision Management
+- Strengths: Rule versioning, traceability, governance
+- Weakness: Infrastructure-heavy, not UI-first, built for banking not EdTech
+
+---
+
+## Current Reality: Google Forms + Sheets + Apps Script
+
+The actual operational stack at most Indian EdTech companies.
+- Weak validation (if any)
+- Manual override culture
+- No structured exception governance
+- No immutable audit trail
+
+**This is exactly what AdmitGuard replaces.**
+
+---
+
+## Strategic Position
+
+AdmitGuard fits the gap between:
+
+```
+[Google Sheets — too weak] ←— AdmitGuard —→ [Enterprise BRMS — too heavy]
+```
+
+It is: lightweight, config-driven, exception-governed, audit-enabled, and deployable in hours — not months.
+
+---
+
+# 6️⃣ Git & Development Environment
+
+---
+
+## 📘 Source: GitHub Git Init Guide
+https://github.com/git-guides/git-init
+
+Decision: Micro-commit per feature — one commit per validation sprint checkpoint. Each commit maps to a prompt result so the build history tells the story of the development process.
+
+---
+
+# 7️⃣ Architectural Decisions Derived from Research
+
+| Decision | What | Why |
+|----------|------|-----|
+| 1 | Separate UI from validation engine | Maintainability — changing a rule shouldn't touch a component |
+| 2 | Rules in `/config/rules.ts`, not hardcoded | Operations team can update without code changes |
+| 3 | Inline validation (strict vs. soft) | UX best practice — error at entry, not at submit |
+| 4 | Structured rationale enforcement | Prevents exception abuse — accountability, not just bypass |
+| 5 | Exception count tracking (system rule) | Surfaces high-risk entries for manager review |
+| 6 | Audit log via `localStorage` | Zero infrastructure, survives page refresh, exportable |
+| 7 | Micro-commit per sprint checkpoint | GitHub shows build progression, maps to prompt log |
+
+---
+
+# 8️⃣ Open Questions (Documented for Honesty)
+
+1. Should Phase 2 move validation server-side to prevent client-side bypass?
+2. How to prevent rationale keyword gaming ("special case" entered with no real justification)?
+3. Should exception density feed into a risk score, not just a binary flag?
+4. Can rules be versioned per cohort (e.g., different age range for different programs)?
+5. How would multi-user access work — who can approve exceptions at manager level?
+
+---
+
+# 9️⃣ Summary of Learning
+
+Vibe Coding is not about writing prompts randomly. It is a **structured prompting discipline**:
+
+1. Know exactly what you want before you type anything
+2. Break the problem into sequenced, layered prompts — one concern per prompt
 3. Treat each prompt as a surgical instruction, not a wish
-4. Review output critically and refine with precision follow-ups
+4. Review output critically against acceptance criteria before moving on
+5. Document what the AI got wrong — that's where the real learning lives
 
-### The Planning-First Advantage
-The students who skip wireframing and jump to prompting hit a wall fast:
-- The AI produces something, but not *their* something
-- They spend 30 minutes trying to describe what they wanted differently
-- They end up in a correction spiral
+The real engineering happens in: planning, rule modeling, architecture separation, and risk awareness.
+The AI is the implementation layer. The engineer is the decision layer.
 
-If you've sketched the form, listed the fields, mapped the validation rules, and drafted 3 prompts in advance — you walk into AI Studio with **a plan**, not a prayer.
-
-### Prompt Structure That Works (What I'll Use)
-
-```
-Role: [who the AI is]
-Task: [clear, specific task]
-Context: [relevant background]
-Constraints: [hard rules]
-Do NOT: [anti-patterns to avoid]
-Output format: [what you expect to receive]
-```
-
-### The Layered Prompting Strategy
-- **Prompt 1** → Structure only (no logic)
-- **Prompt 2** → Add strict rules (no soft rules yet)
-- **Prompt 3** → Edge cases and fixes
-- **Prompt 4+** → Soft fields, exceptions engine, audit log
-
-Never mix structure with logic. Never ask for everything at once.
+> The students who research on Wednesday will be 2 hours ahead on Thursday. That was the point.
 
 ---
 
-## What I Explored in Google AI Studio
-
-- Opened aistudio.google.com → clicked "Build" tab
-- The interface has a prompt panel on the left and a live preview on the right
-- You can switch between Gemini models mid-session
-- The generated code is a single React file — can be expanded into components after
-- File attachments are supported — I could potentially paste my `rules.json` and ask it to wire validation from that config
-- **Key discovery:** You can ask AI Studio to fix specific bugs by describing the broken behavior — it reads the existing generated code and patches it. This is better than re-prompting from scratch.
-
----
-
-## Questions I Still Have
-
-1. How do I structure the `rules.json` schema so the validation engine can read it cleanly? Should rules be per-field objects, or a flat array?
-2. When soft field exceptions are approved, how do I persist the "approved" state alongside the audit log entry — same `localStorage` key or separate?
-3. Can AI Studio handle a multi-view SPA (Form / Audit Log / Dashboard) in a single prompt, or do I need to build each view separately?
-4. How do I prevent the AI from adding animations and hover effects I didn't ask for — should I explicitly list what NOT to include in every prompt?
-5. What's the best way to handle the Percentage/CGPA toggle — two separate inputs that swap, or one input that changes validation range based on mode?
-
----
-
-## Prioritized Must-Haves for Sprint 1
-
-Based on the PRD and my research:
-
-| Priority | Requirement | Why First |
-|---|---|---|
-| P0 | Form structure (all 11 fields) | Everything else depends on this |
-| P0 | Strict validation (7 rules) | Core value proposition |
-| P0 | Rejected status = hard block | Highest compliance risk |
-| P0 | Submit button gate | UX correctness |
-| P1 | Soft field exceptions UI | Core differentiator |
-| P1 | Audit log (localStorage) | Traceability requirement |
-| P2 | Dashboard metrics | Nice to have, review after P1 |
-| P3 | CSV/JSON export | Last, least risky to skip |
+*End of Research Notes — Sprint 0*
