@@ -53,8 +53,8 @@ export const rulesConfig: RulesConfig = {
     {
       field: 'graduationYear',
       type: 'soft',
-      validation: ['range:2015-2026'],
-      warningMessage: 'Graduation year must be between 2015 and 2026',
+      validation: ['range:2015-2025'],
+      warningMessage: 'Graduation year must be between 2015 and 2025',
       exceptionAllowed: true,
       rationaleMinLength: 30,
       rationaleKeywords: ['approved by', 'special case', 'documentation pending', 'waiver granted']
@@ -62,7 +62,7 @@ export const rulesConfig: RulesConfig = {
     {
       field: 'percentageOrCgpa',
       type: 'soft',
-      validation: ['modeAware:scoreType=percentage:minValue:60|cgpa:minValue:5.0'],
+      validation: ['modeAware:scoreType=percentage:minValue:60|cgpa:minValue:6.0'],
       warningMessage: 'Academic score is below recommended threshold',
       exceptionAllowed: true,
       rationaleMinLength: 30,

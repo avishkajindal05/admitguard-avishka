@@ -270,3 +270,13 @@ Show me a summary table of which cases passed and which failed before your fix.
 - Audit log view with timestamp, all field values, exception count
 - Dashboard: total submissions, exception rate, rejection rate
 - Export as JSON
+
+├── prompts/
+│   ├── prompt-01-foundation.md  # Your actual prompts, copy-pasted
+│   ├── prompt-02-strict.md
+│   ├── prompt-03-edge-cases.md
+│   ├── prompt-04-soft-rules.md
+│   ├── prompt-05-exceptions.md
+│   ├── prompt-06-config.md
+│   ├── prompt-07-audit.md
+│   └── prompt-08-polish.md
