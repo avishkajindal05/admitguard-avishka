@@ -13,6 +13,8 @@ interface FormFieldProps {
   value: any;
   onChange: (value: any) => void;
   onBlur?: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  maxLength?: number;
   placeholder?: string;
   options?: string[];
   strict?: boolean;
@@ -32,12 +34,55 @@ interface FormFieldProps {
   onToggleLabelClick?: () => void;
 }
 
+const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 
+  'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+  'Home', 'End'];
+
+export const blockNonNumeric = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (allowedKeys.includes(e.key)) return;
+  if (e.ctrlKey || e.metaKey) return; // allow Ctrl+A, Ctrl+C, Ctrl+V
+  if (!/^\d$/.test(e.key)) e.preventDefault();
+};
+
+export const blockNonNumericAllowDecimal = (
+  e: React.KeyboardEvent<HTMLInputElement>,
+  currentValue: string
+) => {
+  if (allowedKeys.includes(e.key)) return;
+  if (e.ctrlKey || e.metaKey) return;
+  if (e.key === '.' && !currentValue.includes('.')) return; // one dot only
+  if (!/^\d$/.test(e.key)) e.preventDefault();
+};
+
+export const blockNonAlpha = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (allowedKeys.includes(e.key)) return;
+  if (e.ctrlKey || e.metaKey) return;
+  if (/^[a-zA-Z\s\-']$/.test(e.key)) return;
+  e.preventDefault();
+};
+
+export const stripNonNumeric = (val: string, max: number) => 
+  val.replace(/\D/g, '').slice(0, max);
+
+export const stripToAlpha = (val: string) => 
+  val.replace(/[^a-zA-Z\s\-']/g, '');
+
+export const stripToDecimal = (val: string, max: number) => {
+  // Remove everything except digits and first decimal point
+  let cleaned = val.replace(/[^\d.]/g, '');
+  const parts = cleaned.split('.');
+  if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+  return cleaned.slice(0, max);
+};
+
 const FormField: React.FC<FormFieldProps> = ({
   label,
   type,
   value,
   onChange,
   onBlur,
+  onKeyDown,
+  maxLength,
   placeholder,
   options,
   strict = true,
@@ -113,11 +158,14 @@ const FormField: React.FC<FormFieldProps> = ({
       default:
         return (
           <input
-            type={type}
+            type={type === 'number' ? 'text' : type}
+            inputMode={type === 'number' ? 'numeric' : undefined}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onBlur={() => { setIsFocused(false); onBlur?.(); }}
             onFocus={() => setIsFocused(true)}
+            onKeyDown={onKeyDown}
+            maxLength={maxLength}
             placeholder={placeholder}
             disabled={disabled}
             min={min}

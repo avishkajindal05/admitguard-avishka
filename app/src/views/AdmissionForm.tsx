@@ -1,6 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/Card';
-import FormField from '../components/FormField';
+import FormField, { 
+  blockNonNumeric, 
+  blockNonNumericAllowDecimal, 
+  blockNonAlpha, 
+  stripNonNumeric, 
+  stripToAlpha, 
+  stripToDecimal 
+} from '../components/FormField';
 import ExceptionCounter from '../components/ExceptionCounter';
 import ConfirmationModal from '../components/ConfirmationModal';
 import SuccessScreen from '../components/SuccessScreen';
@@ -279,14 +286,47 @@ const AdmissionForm: React.FC = () => {
 
               const exceptionState = exceptionStates[key] || { enabled: false, rationale: '', rationaleError: '' };
 
+              // Apply input restrictions
+              let onKeyDown = undefined;
+              let onChangeOverride = undefined;
+              let maxLength = undefined;
+
+              if (fieldKey === 'phone') {
+                onKeyDown = blockNonNumeric;
+                onChangeOverride = (val: string) => handleFieldChange('phone', stripNonNumeric(val, 10));
+                maxLength = 10;
+              } else if (fieldKey === 'aadhaarNumber') {
+                onKeyDown = blockNonNumeric;
+                onChangeOverride = (val: string) => handleFieldChange('aadhaarNumber', stripNonNumeric(val, 12));
+                maxLength = 12;
+              } else if (fieldKey === 'graduationYear') {
+                onKeyDown = blockNonNumeric;
+                onChangeOverride = (val: string) => handleFieldChange('graduationYear', stripNonNumeric(val, 4));
+                maxLength = 4;
+              } else if (fieldKey === 'screeningScore') {
+                onKeyDown = blockNonNumeric;
+                onChangeOverride = (val: string) => handleFieldChange('screeningScore', stripNonNumeric(val, 3));
+                maxLength = 3;
+              } else if (fieldKey === 'percentageOrCgpa') {
+                const max = formData.scoreType === 'percentage' ? 5 : 4;
+                onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => blockNonNumericAllowDecimal(e, formData.percentageOrCgpa);
+                onChangeOverride = (val: string) => handleFieldChange('percentageOrCgpa', stripToDecimal(val, max));
+                maxLength = max;
+              } else if (fieldKey === 'fullName') {
+                onKeyDown = blockNonAlpha;
+                onChangeOverride = (val: string) => handleFieldChange('fullName', stripToAlpha(val));
+              }
+
               return (
                 <FormField
                   key={key}
                   label={fieldKey === 'percentageOrCgpa' ? (formData.scoreType === 'percentage' ? 'Percentage' : 'CGPA') : config.label}
                   type={config.type as any}
                   value={formData[fieldKey]}
-                  onChange={(val) => handleFieldChange(fieldKey, val)}
+                  onChange={onChangeOverride || ((val) => handleFieldChange(fieldKey, val))}
                   onBlur={() => handleFieldChange(fieldKey, formData[fieldKey])}
+                  onKeyDown={onKeyDown}
+                  maxLength={maxLength}
                   placeholder={config.placeholder}
                   options={config.options}
                   strict={isStrict}
