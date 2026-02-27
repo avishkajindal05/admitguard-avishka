@@ -33,6 +33,16 @@ export interface Submission {
   flagged: boolean;
 }
 
+export interface AuditEntry {
+  id: string;
+  timestamp: string;
+  candidateName: string;
+  formData: CandidateData;
+  exceptionCount: number;
+  exceptionFields: Exception[];
+  isFlagged: boolean;
+}
+
 export interface DashboardMetrics {
   totalSubmissions: number;
   totalExceptions: number;

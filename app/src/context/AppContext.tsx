@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { View, Submission, DashboardMetrics } from '../types';
+import { loadAuditLog, saveAuditEntry, clearAuditLog } from '../utils/auditStorage';
 
 interface AppContextType {
   currentView: View;
   setCurrentView: (view: View) => void;
   submissions: Submission[];
   addSubmission: (submission: Submission) => void;
+  clearSubmissions: () => void;
   metrics: DashboardMetrics;
 }
 
@@ -17,23 +19,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Load from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('admitguard_submissions');
-    if (saved) {
-      try {
-        setSubmissions(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse submissions', e);
-      }
-    }
+    setSubmissions(loadAuditLog());
   }, []);
 
-  // Save to localStorage when submissions change
-  useEffect(() => {
-    localStorage.setItem('admitguard_submissions', JSON.stringify(submissions));
-  }, [submissions]);
-
   const addSubmission = (submission: Submission) => {
-    setSubmissions(prev => [submission, ...prev]);
+    setSubmissions(prev => {
+      const next = [submission, ...prev];
+      localStorage.setItem('admitguard_audit_log', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const clearSubmissions = () => {
+    setSubmissions([]);
+    clearAuditLog();
   };
 
   const metrics: DashboardMetrics = {
@@ -46,7 +45,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ currentView, setCurrentView, submissions, addSubmission, metrics }}>
+    <AppContext.Provider value={{ currentView, setCurrentView, submissions, addSubmission, clearSubmissions, metrics }}>
       {children}
     </AppContext.Provider>
   );
