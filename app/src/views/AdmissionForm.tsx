@@ -10,6 +10,7 @@ import { useAppContext } from '../context/AppContext';
 import { AlertCircle } from 'lucide-react';
 import { rulesConfig } from '../config/rules';
 import { validateField, validateRationale } from '../utils/validationEngine';
+import { loadAuditLog } from '../utils/auditStorage';
 
 const AdmissionForm: React.FC = () => {
   const { addSubmission } = useAppContext();
@@ -53,6 +54,18 @@ const AdmissionForm: React.FC = () => {
         const newErrors = { ...prevErrors };
         if (result.error) newErrors[field] = result.error;
         else delete newErrors[field];
+
+        // FIX 1: Email Uniqueness (FR-2a)
+        if (field === 'email' && value && !newErrors.email) {
+          const auditLog = loadAuditLog();
+          const isDuplicate = auditLog.some(entry => 
+            entry.candidateData.email.toLowerCase() === value.toLowerCase()
+          );
+          if (isDuplicate) {
+            newErrors.email = "This email has already been submitted. Duplicate entries are not allowed.";
+          }
+        }
+
         return newErrors;
       });
 
@@ -92,11 +105,11 @@ const AdmissionForm: React.FC = () => {
       
       // Enable new warnings
       Object.keys(newSoftWarnings).forEach(field => {
-        if (!next[field] || !next[field].enabled) {
+        if (!next[field]) {
           next[field] = { 
-            enabled: true, 
-            rationale: next[field]?.rationale || '', 
-            rationaleError: next[field]?.rationaleError 
+            enabled: false, // FIX 2: Exception Toggle Must Be Manual (FR-4a)
+            rationale: '', 
+            rationaleError: undefined 
           };
           hasChanges = true;
         }
@@ -116,7 +129,11 @@ const AdmissionForm: React.FC = () => {
 
   const isFormValid = useMemo(() => {
     const hasStrictErrors = Object.keys(errors).length > 0;
-    const requiredFields: (keyof CandidateData)[] = ['fullName', 'email', 'phone', 'highestQualification', 'aadhaarNumber', 'interviewStatus'];
+    // FIX 3: All Fields Must Be Filled Before Submission
+    const requiredFields: (keyof CandidateData)[] = [
+      'fullName', 'email', 'phone', 'highestQualification', 'aadhaarNumber', 
+      'interviewStatus', 'dob', 'graduationYear', 'percentageOrCgpa', 'screeningScore'
+    ];
     const allRequiredFilled = requiredFields.every(field => !!formData[field]);
     
     if (hasStrictErrors || !allRequiredFilled || isRejected) return false;
