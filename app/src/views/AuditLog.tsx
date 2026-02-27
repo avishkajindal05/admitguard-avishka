@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Card from '../components/Card';
 import { useAppContext } from '../context/AppContext';
 import { format } from 'date-fns';
-import { Search, Filter, Eye, ShieldAlert, CheckCircle2, X, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Eye, ShieldAlert, CheckCircle2, X, Trash2, AlertTriangle, Download, FileJson } from 'lucide-react';
 import { Submission, CandidateData } from '../types';
 import { FIELD_CONFIG } from '../constants';
 
@@ -10,10 +10,76 @@ const AuditLog: React.FC = () => {
   const { submissions, clearSubmissions } = useAppContext();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const handleClearLog = () => {
     clearSubmissions();
     setIsClearModalOpen(false);
+  };
+
+  const downloadFile = (content: string, fileName: string, contentType: string) => {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportJSON = () => {
+    if (submissions.length === 0) {
+      setExportError("No data to export");
+      setTimeout(() => setExportError(null), 3000);
+      return;
+    }
+    const date = format(new Date(), 'yyyy-MM-dd');
+    const content = JSON.stringify(submissions, null, 2);
+    downloadFile(content, `admitguard-audit-${date}.json`, 'application/json');
+  };
+
+  const exportCSV = () => {
+    if (submissions.length === 0) {
+      setExportError("No data to export");
+      setTimeout(() => setExportError(null), 3000);
+      return;
+    }
+    const date = format(new Date(), 'yyyy-MM-dd');
+    const headers = [
+      "ID", "Timestamp", "Full Name", "Email", "Phone", "DOB", "Qualification", 
+      "Grad Year", "Score", "Screening Score", "Interview Status", "Aadhaar", 
+      "Offer Letter Sent", "Exception Count", "Flagged", "Exception Fields", "Exception Rationales"
+    ];
+
+    const rows = submissions.map(s => {
+      const exFields = s.exceptions.map(ex => ex.field).join('|');
+      const exRationales = s.exceptions.map(ex => ex.rationale).join('|');
+      
+      return [
+        s.id,
+        s.timestamp,
+        s.candidateData.fullName,
+        s.candidateData.email,
+        s.candidateData.phone,
+        s.candidateData.dob,
+        s.candidateData.highestQualification,
+        s.candidateData.graduationYear,
+        s.candidateData.percentageOrCgpa,
+        s.candidateData.screeningScore,
+        s.candidateData.interviewStatus,
+        s.candidateData.aadhaarNumber,
+        s.candidateData.offerLetterSent ? "Yes" : "No",
+        s.exceptionCount,
+        s.flagged ? "Yes" : "No",
+        exFields,
+        exRationales
+      ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+    });
+
+    const content = [headers.join(','), ...rows].join('\n');
+    downloadFile(content, `admitguard-audit-${date}.csv`, 'text/csv');
   };
 
   return (
@@ -24,6 +90,25 @@ const AuditLog: React.FC = () => {
           <p className="text-sm text-[#6B7280]">Immutable record of all successful admissions.</p>
         </div>
         <div className="flex items-center gap-3">
+          {exportError && (
+            <span className="text-xs font-medium text-amber-600 animate-in fade-in slide-in-from-right-2">
+              {exportError}
+            </span>
+          )}
+          <button 
+            onClick={exportCSV}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#D1D5DB] bg-white text-sm font-medium text-[#4B5563] hover:bg-[#F8F9FB] transition-all"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <button 
+            onClick={exportJSON}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#D1D5DB] bg-white text-sm font-medium text-[#4B5563] hover:bg-[#F8F9FB] transition-all"
+          >
+            <FileJson className="w-4 h-4" />
+            Export JSON
+          </button>
           <button 
             onClick={() => setIsClearModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-sm font-medium text-red-600 hover:bg-red-100 transition-all"
