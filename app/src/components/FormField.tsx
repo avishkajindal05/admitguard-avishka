@@ -60,10 +60,10 @@ const FormField: React.FC<FormFieldProps> = ({
 
   const renderInput = () => {
     const commonClasses = cn(
-      "w-full h-11 px-3 rounded-lg border transition-all duration-200 outline-none text-[15px] bg-white",
-      isFocused ? "border-primary ring-2 ring-primary/10 shadow-sm" : "border-[#D1D5DB]",
-      error ? "border-red-500 bg-red-50/10" : warning ? "border-amber-500 bg-amber-50/10" : "hover:border-[#9CA3AF]",
-      disabled && "bg-[#F3F4F6] cursor-not-allowed text-[#9CA3AF] border-[#E5E7EB]"
+      "w-full h-11 px-3 rounded-lg border transition-all duration-200 outline-none text-[15px] bg-white dark:bg-[#0F172A] dark:border-[#334155] dark:text-[#F1F5F9] dark:placeholder:text-[#64748B]",
+      isFocused ? "border-primary ring-2 ring-primary/20 shadow-sm" : "border-[#D1D5DB] dark:border-[#334155]",
+      error ? "border-red-500 bg-red-50/10 dark:bg-red-500/5" : warning ? "border-amber-500 bg-amber-50/10 dark:bg-amber-500/5" : "hover:border-[#9CA3AF] dark:hover:border-[#4B5563]",
+      disabled && "bg-[#F3F4F6] dark:bg-[#1E293B] cursor-not-allowed text-[#9CA3AF] dark:text-[#64748B] border-[#E5E7EB] dark:border-[#334155]"
     );
 
     switch (type) {
@@ -107,7 +107,7 @@ const FormField: React.FC<FormFieldProps> = ({
                 )}
               />
             </button>
-            <span className="text-sm font-medium text-[#4B5563]">{value ? 'Yes' : 'No'}</span>
+            <span className="text-sm font-medium text-[#4B5563] dark:text-[#94A3B8]">{value ? 'Yes' : 'No'}</span>
           </div>
         );
       default:
@@ -134,10 +134,10 @@ const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className="space-y-1.5 mb-6 group">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-[#374151] flex items-center gap-1.5">
+        <label className="text-sm font-medium text-[#374151] dark:text-[#CBD5E1] flex items-center gap-1.5">
           {label}
           {strict && <span className="text-strict-text font-bold">*</span>}
-          {!strict && <HelpCircle className="w-3.5 h-3.5 text-[#9CA3AF] cursor-help" />}
+          {!strict && <HelpCircle className="w-3.5 h-3.5 text-[#9CA3AF] dark:text-[#64748B] cursor-help" />}
         </label>
         {toggleLabel && (
           <button 
@@ -188,7 +188,7 @@ const FormField: React.FC<FormFieldProps> = ({
           </div>
         )}
         {helperText && !error && !warning && (
-          <p className="text-[13px] text-[#6B7280] italic">{helperText}</p>
+          <p className="text-[13px] text-[#6B7280] dark:text-[#94A3B8] italic">{helperText}</p>
         )}
       </div>
 
@@ -196,10 +196,10 @@ const FormField: React.FC<FormFieldProps> = ({
       {warning && isExceptionEnabled && !strict && (
         <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between">
-            <label className="text-[13px] font-semibold text-[#374151] uppercase tracking-wider">
+            <label className="text-[13px] font-semibold text-[#374151] dark:text-[#CBD5E1] uppercase tracking-wider">
               Exception Rationale
             </label>
-            <span className="text-[11px] text-[#9CA3AF] font-mono">
+            <span className="text-[11px] text-[#9CA3AF] dark:text-[#64748B] font-mono">
               {exceptionRationale?.length || 0} / 30 min chars
             </span>
           </div>
@@ -208,12 +208,12 @@ const FormField: React.FC<FormFieldProps> = ({
             onChange={(e) => onExceptionRationaleChange?.(e.target.value)}
             placeholder="Provide justification for exception (min 30 chars with approval phrase)"
             className={cn(
-              "w-full min-h-[100px] p-3 rounded-lg border outline-none text-[14px] transition-all focus:ring-2",
+              "w-full min-h-[100px] p-3 rounded-lg border outline-none text-[14px] transition-all focus:ring-2 bg-white dark:bg-[#0F172A] dark:text-[#F1F5F9] dark:border-[#334155] dark:placeholder:text-[#64748B]",
               rationaleError 
-                ? "border-red-500 bg-red-50/10 focus:ring-red-500/10" 
+                ? "border-red-500 bg-red-50/10 dark:bg-red-500/5 focus:ring-red-500/10" 
                 : (exceptionRationale?.length || 0) >= 30 
-                  ? "border-green-500 bg-green-50/5 focus:ring-green-500/10" 
-                  : "border-amber-500 bg-amber-50/5 focus:ring-amber-500/10"
+                  ? "border-green-500 bg-green-50/5 dark:bg-green-500/5 focus:ring-green-500/10" 
+                  : "border-amber-500 bg-amber-50/5 dark:bg-amber-500/5 focus:ring-amber-500/10"
             )}
           />
           {rationaleError ? (
@@ -221,7 +221,7 @@ const FormField: React.FC<FormFieldProps> = ({
               {rationaleError}
             </p>
           ) : (
-            <p className="text-[12px] text-[#6B7280]">
+            <p className="text-[12px] text-[#6B7280] dark:text-[#94A3B8]">
               Rationale must be at least 30 characters and include an approval phrase (e.g., ‘approved by’, ‘special case’).
             </p>
           )}

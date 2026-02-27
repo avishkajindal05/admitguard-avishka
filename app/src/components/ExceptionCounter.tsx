@@ -21,7 +21,7 @@ const ExceptionCounter: React.FC<ExceptionCounterProps> = ({ count, className })
       <AlertTriangle className={cn("w-4 h-4", count > 0 ? "text-amber-600" : "text-[#9CA3AF]")} />
       <span className={cn(
         "text-sm font-semibold",
-        count > 0 ? "text-amber-600" : "text-[#6B7280]"
+        count > 0 ? "text-amber-600" : "text-[#6B7280] dark:text-[#94A3B8]"
       )}>
         Active Exceptions: {count}/4
       </span>

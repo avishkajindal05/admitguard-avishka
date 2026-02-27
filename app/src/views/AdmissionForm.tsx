@@ -245,12 +245,12 @@ const AdmissionForm: React.FC = () => {
       <div className="flex items-center justify-center gap-4 mb-8">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-primary/20">1</div>
-          <span className="text-sm font-bold text-[#1F2937]">Candidate Details</span>
+          <span className="text-sm font-bold text-[#1F2937] dark:text-[#F1F5F9]">Candidate Details</span>
         </div>
-        <div className="w-16 h-[2px] bg-[#EAECEF]" />
+        <div className="w-16 h-[2px] bg-[#EAECEF] dark:bg-[#334155]" />
         <div className="flex items-center gap-2 opacity-40">
-          <div className="w-8 h-8 rounded-full bg-[#EAECEF] text-[#9CA3AF] flex items-center justify-center text-sm font-bold">2</div>
-          <span className="text-sm font-medium text-[#4B5563]">Verification</span>
+          <div className="w-8 h-8 rounded-full bg-[#EAECEF] dark:bg-[#334155] text-[#9CA3AF] dark:text-[#64748B] flex items-center justify-center text-sm font-bold">2</div>
+          <span className="text-sm font-medium text-[#4B5563] dark:text-[#94A3B8]">Verification</span>
         </div>
       </div>
 
@@ -326,14 +326,14 @@ const AdmissionForm: React.FC = () => {
             </div>
           )}
 
-          <div className="pt-8 border-t border-[#EAECEF] flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="pt-8 border-t border-[#EAECEF] dark:border-[#334155] flex flex-col md:flex-row items-center justify-between gap-6">
             <ExceptionCounter count={exceptionCount} />
             
             <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 h-11 rounded-lg border border-[#D1D5DB] text-sm font-semibold text-[#4B5563] hover:bg-[#F8F9FB] transition-all"
+                className="px-6 h-11 rounded-lg border border-[#D1D5DB] dark:border-[#334155] text-sm font-semibold text-[#4B5563] dark:text-[#94A3B8] hover:bg-[#F8F9FB] dark:hover:bg-[#0F172A] transition-all"
               >
                 Reset Form
               </button>
@@ -341,12 +341,12 @@ const AdmissionForm: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!isFormValid}
-                  className="px-10 h-11 rounded-lg bg-primary text-sm font-bold text-white hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] disabled:cursor-not-allowed disabled:shadow-none"
+                  className="px-10 h-11 rounded-lg bg-primary text-sm font-bold text-white hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:bg-[#E5E7EB] dark:disabled:bg-[#334155] disabled:text-[#9CA3AF] dark:disabled:text-[#64748B] disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   Submit Admission
                 </button>
                 {!isFormValid && (
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1F2937] text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1F2937] dark:bg-[#334155] text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
                     {isRejected ? "Rejected candidates cannot be enrolled" : "Fix validation errors to submit"}
                   </div>
                 )}

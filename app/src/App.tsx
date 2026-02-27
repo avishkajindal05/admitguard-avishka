@@ -23,13 +23,13 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#F8F9FB] dark:bg-[#0F172A] transition-colors duration-300">
       <Sidebar />
       
       <div className="flex-1 ml-60 flex flex-col">
         <Header />
         
-        <main className="flex-1 mt-24 p-8 overflow-y-auto">
+        <main className="flex-1 p-8 overflow-y-auto">
           {renderView()}
         </main>
       </div>

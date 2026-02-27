@@ -9,6 +9,10 @@ interface AppContextType {
   addSubmission: (submission: Submission) => void;
   clearSubmissions: () => void;
   metrics: DashboardMetrics;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -16,6 +20,22 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<View>('admission-form');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('admitguard_dark_mode') || 'false');
+    } catch { return false; }
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('admitguard_dark_mode', JSON.stringify(darkMode));
+  }, [darkMode]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -35,6 +55,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clearAuditLog();
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
+
   const metrics: DashboardMetrics = {
     totalSubmissions: submissions.length,
     totalExceptions: submissions.reduce((acc, s) => acc + s.exceptionCount, 0),
@@ -45,7 +69,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ currentView, setCurrentView, submissions, addSubmission, clearSubmissions, metrics }}>
+    <AppContext.Provider value={{ 
+      currentView, 
+      setCurrentView, 
+      submissions, 
+      addSubmission, 
+      clearSubmissions, 
+      metrics,
+      darkMode,
+      toggleDarkMode,
+      searchQuery,
+      setSearchQuery
+    }}>
       {children}
     </AppContext.Provider>
   );

@@ -18,27 +18,27 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ submission, onReset }) =>
         <CheckCircle2 className="w-10 h-10 text-success-text" />
       </div>
       
-      <h2 className="text-2xl font-bold text-[#1F2937] mb-2 text-center">Submission Successful</h2>
-      <p className="text-[#6B7280] text-center mb-10 max-w-md">
+      <h2 className="text-2xl font-bold text-[#1F2937] dark:text-[#F1F5F9] mb-2 text-center">Submission Successful</h2>
+      <p className="text-[#6B7280] dark:text-[#94A3B8] text-center mb-10 max-w-md">
         Candidate admission data has been recorded and added to the audit log.
       </p>
 
-      <div className="w-full max-w-md bg-white border border-[#EAECEF] rounded-2xl overflow-hidden shadow-sm mb-10">
+      <div className="w-full max-w-md bg-white dark:bg-[#1E293B] border border-[#EAECEF] dark:border-[#334155] rounded-2xl overflow-hidden shadow-sm mb-10">
         <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF]">
-            <span className="text-sm font-medium text-[#9CA3AF] uppercase tracking-wider">Candidate</span>
-            <span className="text-sm font-bold text-[#1F2937]">{submission.candidateData.fullName}</span>
+          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF] dark:border-[#334155]">
+            <span className="text-sm font-medium text-[#9CA3AF] dark:text-[#64748B] uppercase tracking-wider">Candidate</span>
+            <span className="text-sm font-bold text-[#1F2937] dark:text-[#F1F5F9]">{submission.candidateData.fullName}</span>
           </div>
-          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF]">
-            <span className="text-sm font-medium text-[#9CA3AF] uppercase tracking-wider">Timestamp</span>
-            <span className="text-sm font-medium text-[#4B5563]">{format(new Date(submission.timestamp), 'MMM d, yyyy HH:mm:ss')}</span>
+          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF] dark:border-[#334155]">
+            <span className="text-sm font-medium text-[#9CA3AF] dark:text-[#64748B] uppercase tracking-wider">Timestamp</span>
+            <span className="text-sm font-medium text-[#4B5563] dark:text-[#94A3B8]">{format(new Date(submission.timestamp), 'MMM d, yyyy HH:mm:ss')}</span>
           </div>
-          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF]">
-            <span className="text-sm font-medium text-[#9CA3AF] uppercase tracking-wider">Exceptions</span>
+          <div className="flex justify-between items-center pb-4 border-b border-[#EAECEF] dark:border-[#334155]">
+            <span className="text-sm font-medium text-[#9CA3AF] dark:text-[#64748B] uppercase tracking-wider">Exceptions</span>
             <span className="text-sm font-bold text-soft-text">{submission.exceptionCount}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-[#9CA3AF] uppercase tracking-wider">Status</span>
+            <span className="text-sm font-medium text-[#9CA3AF] dark:text-[#64748B] uppercase tracking-wider">Status</span>
             {submission.flagged ? (
               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-flagged-bg text-flagged-text text-xs font-bold uppercase tracking-wider">
                 <ShieldAlert className="w-3 h-3" />
@@ -63,7 +63,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ submission, onReset }) =>
         </button>
         <button
           onClick={() => setCurrentView('audit-log')}
-          className="flex items-center gap-2 px-6 h-11 rounded-lg border border-[#D1D5DB] text-sm font-semibold text-[#4B5563] hover:bg-white transition-all"
+          className="flex items-center gap-2 px-6 h-11 rounded-lg border border-[#D1D5DB] dark:border-[#334155] text-sm font-semibold text-[#4B5563] dark:text-[#94A3B8] hover:bg-white dark:hover:bg-[#1E293B] transition-all"
         >
           <History className="w-4 h-4" />
           Go to Audit Log
