@@ -143,10 +143,10 @@ admitguard-avishka/
 │   └── prompt-sequence.md
 ├── wireframes/
 │   └── napkin.pdf              ← Initial hand-drawn wireframe (Sprint 0)
-├── config/                     ← Placeholder (rules live inside app/src/config/)
 ├── docs/
 │   ├── architecture.md         ← System design and data flow
 │   └── presentation.pdf        ← Solution proposal deck (Day 6)
+│   └── App flow.docx
 └── app/                        ← Application source (exported from AI Studio)
     ├── src/
     │   ├── components/         ← Card, FormField, Header, Sidebar, etc.
@@ -191,6 +191,6 @@ If a single candidate submission has **more than 2 active exceptions**, the entr
 |-----------|--------|--------|
 | Functional Completeness (All 8 Must Haves) | 25% | ✅ Complete |
 | Prompt Engineering Quality | 20% | ✅ 8 structured prompts documented |
-| Presentation & Business Thinking | 25% | 🔲 In progress |
+| Presentation & Business Thinking | 25% | ✅ Complete |
 | Self-Directed Research | 15% | ✅ See `research-notes.md` |
-| GitHub & Process Discipline | 15% | ✅ 15 commits, sprint log, clean structure |
+| GitHub & Process Discipline | 15% | ✅ 23 commits, sprint log, clean structure |

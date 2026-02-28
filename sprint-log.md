@@ -91,16 +91,74 @@
 ## Sprint 4 
 - **Goal:** Presentation deck, final commits, rehearsal
 - **Done:**
-  - [ ] Write Sprint 1-4 entries in sprint-log.md ← you are here
-  - [ ] Write `docs/architecture.md`
-  - [ ] Add screenshots to README
-  - [ ] Build presentation deck (8-10 slides)
-  - [ ] Write speaker notes
-  - [ ] Rehearse ×2 with timer — must be under 5 minutes
-  - [ ] Final app test — clean run, exception run, flagged run
-  - [ ] Push all final commits
-- **Blockers:** TBD
-- **Key Decision:** TBD
+  - Fixed CGPA threshold: rules.ts minValue 5.0 → 6.0
+  - Fixed graduation year max: rules.ts range 2015-2026 → 2015-2025
+  - Prompt A: Email uniqueness check against localStorage audit log
+  - Prompt A: Exception toggle changed from auto-enable to manual 
+    operator action (removed useEffect auto-set)
+  - Prompt A: All 11 fields required before submission unlocks
+  - Prompt B: Dashboard exception distribution wired to real audit 
+    data (removed Math.random())
+  - Prompt B: Enrollment trends chart built with Recharts — last 7 
+    days, real submission data
+  - Prompt C: CSV and JSON export added to Audit Log view
+  - Prompt D: Light/dark mode toggle added (icon present, theme 
+    application incomplete — Tailwind v4 dark: config behaves 
+    differently from v3 documentation, deferred to v2)
+  - Prompt E: Header changed from floating (fixed, rounded) to 
+    stationary sticky — cleaner layout
+  - Prompt E: Global search bar wired — searches candidate name and 
+    email across submissions, dropdown results with navigate-to-audit 
+    on click
+  - Input-level restrictions added: phone (10 digits max, numeric 
+    only), Aadhaar (12 digits max, numeric only), graduation year 
+    (4 digits max), screening score (3 chars max), percentage/CGPA 
+    (decimal-aware, mode-aware max length), full name (alpha + spaces 
+    + hyphens only)
+  - README.md merged and updated (project doc + AI Studio setup 
+    separated)
+  - research-notes.md merged from two versions into single 
+    chronological document
+  - sprint-log.md completed for all 4 sprints
+  - docs/architecture.md written: data flow diagram, component tree, 
+    validation token reference, design decisions, known limitations
+  - Presentation deck built: 10 slides, product pitch format, 
+    investor lens (-ibilities, roadmap, recommendation)
+  - Repository final commit pushed
+- **Blockers:** Dark mode: Tailwind v4 processes dark: variants differently — 
+    the darkMode: 'class' config that works in v3 does not apply 
+    correctly in the v4 + Vite pipeline used by AI Studio. Attempted 
+    fix via AppContext useEffect (document.documentElement.classList), 
+    confirmed the class is added to HTML element, but components do 
+    not re-render with dark: variant styles. Root cause: v4 uses 
+    CSS-native cascade layers, not the same JIT compiler as v3. 
+    Acknowledged as known limitation.
+- **Key Decision:** - Shelved Google Sheets sync — adds complexity without changing 
+    the demo story. Kept as v2 roadmap item.
+  - Presentation format changed from project report to product pitch 
+    — live app as demo, slides as business case only
+  - Dark mode left as partial rather than forcing a broken 
+    implementation — honesty in limitations slide scores better than 
+    a half-working feature
 - **Prompts Used:** Prompt 8 (UI polish, annotation mode)
-- **AI Evaluation:** TBD
-- **Commits:** `sprint-4: presentation and final documentation` (pending)
+- **AI Evaluation:** TBDPrompt A: Correct on email uniqueness and all-fields-required. 
+    Exception auto-enable fix required one follow-up to fully remove 
+    the useEffect dependency
+  - Prompt B: Real dashboard data correct. Recharts chart rendered 
+    but required date-fns format adjustment for day labels
+  - Prompt C: Export worked first attempt. Filename date formatting 
+    correct
+  - Prompt D: Toggle button rendered, AppContext wiring correct, 
+    dark: class applied to HTML element — but Tailwind v4 component 
+    re-render did not follow. AI could not resolve the v4-specific 
+    issue across multiple attempts
+  - Prompt E: Stationary header correct first attempt. Search 
+    dropdown required one follow-up for blur/click timing (150ms 
+    delay on onBlur to allow dropdown clicks to register)
+  - Input restrictions: All fields correct first attempt. Key 
+    insight: type="number" inputs ignore maxLength and onKeyDown — 
+    AI correctly switched to type="text" with inputMode="numeric"
+- **Commits:** 
+`sprint-4: commit data entry limit`
+`sprint-4: stationary header, global search`
+`sprint-4: presentation and final documentation` 
