@@ -2,6 +2,7 @@
   <img width="1200" height="475" alt="AdmitGuard Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
   <h1>AdmitGuard</h1>
   <p><strong>A rule-driven candidate admission validation and compliance system for education enrollment pipelines.</strong></p>
+  <p><strong>Presentation Link: https://drive.google.com/file/d/126YKzxkqo2mM8AoSL_-OMkmfBxLX-_5U/view?usp=sharing </strong></p>
   <p>
     <a href="https://ai.studio/apps/002783f5-50e0-4451-a8ea-ef7190eaca38">🚀 Live App (AI Studio)</a> · 
     <a href="./prompts/">Prompt Log</a> · 
